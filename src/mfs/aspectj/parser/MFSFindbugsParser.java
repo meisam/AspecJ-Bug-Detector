@@ -3,6 +3,10 @@
  */
 package mfs.aspectj.parser;
 
+import java.io.File;
+import java.util.Collection;
+import java.util.Iterator;
+
 import mfs.aspectj.parser.Constants.FileNames;
 import abc.main.Main;
 
@@ -14,64 +18,75 @@ import abc.main.Main;
  */
 public class MFSFindbugsParser {
 
+	private static final String DEFAULT_BASE_DIR = "src";
+
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) {
 		try {
+			String[] abcArgs;
+			String baseDir;
+			if (args == null || args.length == 0) {
+				System.out.println("No source folder specified");
+				System.out
+						.println("Using default source ($CURRENT_DIRECTORY/src) ...");
+				abcArgs = getArgsForDirectory(DEFAULT_BASE_DIR);
+			} else if (args[0].trim().equals("-dava")) {
+				if (args.length == 1) {
+					baseDir = DEFAULT_BASE_DIR;
+				} else {
+					baseDir = args[1];
+				}
+				abcArgs = getDavaArgsForDirectory(baseDir);
+			} else {
+				baseDir = args[0];
+				abcArgs = getArgsForDirectory(baseDir);
+			}
 
-			args = getTelecomArgs();
-			args = getSimpleAspectJSampleArgs();
-			Main.main(args);
+			Main.main(abcArgs);
 			System.out.println("");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
-	private static String[] getSimpleAspectJSampleArgs() {
-		return new String[] {
+	private static String[] getArgsForDirectory(final String baseDir) {
+		File directory = new File(baseDir);
+		Collection<File> allFiles = FileSystemUtility.listAllFile(directory);
 
-		// all parameters
+		String[] abcArgs = new String[allFiles.size() + 3];
+		abcArgs[0] = "-verbose";
+		abcArgs[allFiles.size() + 1] = "-ext";
+		abcArgs[allFiles.size() + 2] = "mfs.aspectj.findbugs";
 
-				"-verbose", // print verbose debugging info
-
-				// Java Classes
-				"D:/Documents/Projects/AspectJ Samples/AspectJ BenchMark/src/mfs/faultmodels/SimpleAspect.aj", //
-
-				// other parameters
-				"-ext", // switch to set extension
-				"mfs.aspectj.findbugs" // let the extension be my extension
-		};
+		int currentIndex = 1;
+		Iterator<File> iterator = allFiles.iterator();
+		while (iterator.hasNext()) {
+			File file = iterator.next();
+			abcArgs[currentIndex] = file.getAbsolutePath();
+			currentIndex++;
+		}
+		return abcArgs;
 	}
 
-	/**
-	 * @return
-	 */
-	public static String[] getTelecomArgs() {
-		return new String[] { // all parameters
-		"-verbose", // print verbose debugging info
+	private static String[] getDavaArgsForDirectory(final String baseDir) {
+		File directory = new File(baseDir);
+		Collection<File> allFiles = FileSystemUtility.listAllFile(directory);
 
-				// Java Classes
-				FileNames.ABSTRACTSIMULATION_CLASS,//
-				FileNames.BASICSIMULATION_CLASS,//
-				FileNames.BILLINGSIMULATION_CLASS,//
-				FileNames.CALL_CLASS,//
-				FileNames.CONNECTION_CLASS,//
-				FileNames.CUSTOMER_CLASS,//
-				FileNames.LOCAL_CLASS, //
-				FileNames.LONGDISTANCE_CLASS, //
-				FileNames.TIMER_CLASS,//
-				FileNames.TIMINGSIMULATION_CLASS, //
+		String[] abcArgs = new String[allFiles.size() + 4];
+		abcArgs[0] = "-verbose";
+		abcArgs[allFiles.size() + 1] = "-ext";
+		abcArgs[allFiles.size() + 2] = "mfs.aspectj.findbugs";
+		abcArgs[allFiles.size() + 3] = "-dava";
 
-				// aspects
-				FileNames.BILLING_ASPECT,// 
-				FileNames.TIMING_ASPECT, //
-				FileNames.TIMERLOG_ASPECT,//
-
-				// other parameters
-				"-ext", // switch to set extension
-				"mfs.aspectj.findbugs" // let the extension be my extension
-		};
+		int currentIndex = 1;
+		Iterator<File> iterator = allFiles.iterator();
+		while (iterator.hasNext()) {
+			File file = iterator.next();
+			abcArgs[currentIndex] = file.getAbsolutePath();
+			currentIndex++;
+		}
+		return abcArgs;
 	}
 }
