@@ -1,18 +1,62 @@
-<project default="compile" name="Build file for decompiled code">
-	<description>
-		This is the build file produced by Dava for the decompiled code.
-		New features like (formatting using jalopy etc) will be added to this build file
-	</description>
-	<!-- properties for project directories -->
-	<property name="srcDir" location="src"/>
-	<property name="classesDir" location="classes"/>
-	<!--  ========== Compile Target ================= -->
-	<target name="compile" description="Compile .java files">
-	<javac srcdir="${srcDir}" destdir="${classesDir}">
-		<classpath>
-			<pathelement location="${junitJar}"/>
-	  	</classpath>
-	</javac>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project basedir="." default="deploy-project" name="AspectJ Bug Detector">
+	<property environment="env" />
+	<property name="debuglevel" value="source,lines,vars" />
+	<property name="target" value="1.6" />
+	<property name="source" value="1.6" />
+	<property name="project.src.dir" value="${basedir}/src" />
+	<property name="project.bin.dir" value="${basedir}/bin" />
+	<property name="project.lib.dir" value="${basedir}/lib" />
+	<property name="project.dist.dir" value="${basedir}/dist" />
+	<property name="project.abc.binfile" value="abc-ja-complete.jar" />
+	<property name="project.mainclass" value="mfs.aspectj.parser.MFSFindbugsParser" />
+	<property name="project.officialname" value="ajbd" />
+	<property name="project.version.major" value="0" />
+	<property name="project.version.minor" value="3" />
+	<property name="project.version.build" value="0" />
+	<tstamp />
+	<property name="project.releasename" value="${project.officialname}-${project.version.major}.${project.version.minor}.${project.version.build}.${DSTAMP}${TSTAMP}.jar" />
+
+	<path id="project.classpath">
+		<pathelement location="${project.lib.dir}/${project.abc.binfile}"/>
+	</path>
+
+	<!-- ========== clean  ========== -->
+	<target name="clean">
+		<delete dir="${project.bin.dir}" />
+		<delete dir="${project.dist.dir}" />
 	</target>
-	<!--  ==========AST METRICS FOR DECOMPILED CODE================= -->
+
+	<!-- ========== init  ========== -->
+	<target name="init">
+		<mkdir dir="${project.bin.dir}" />
+		<mkdir dir="${project.dist.dir}" />
+		<copy includeemptydirs="false" todir="${project.bin.dir}">
+			<fileset dir="${project.src.dir}">
+				<exclude name="**/*.launch" />
+				<exclude name="**/*.java" />
+			</fileset>
+		</copy>
+	</target>
+
+	<!-- ========== build-project  ========== -->
+	<target name="build-project" depends="init">
+		<echo message="${ant.project.name}: ${ant.file}" />
+		<javac debug="false" destdir="${project.bin.dir}" source="${source}" target="${target}">
+			<src path="${project.src.dir}" />
+			<classpath refid="project.classpath" />
+		</javac>
+	</target>
+
+	<!-- ========== deploy-project  ========== -->
+	<target name="deploy-project" depends="build-project">
+		<echo message="Making the jar file" />
+		<jar destfile="${project.dist.dir}/${project.releasename}">
+			<manifest>
+				<attribute name="Main-Class" value="${project.mainclass}" />
+			</manifest>
+			<fileset dir="bin"/>
+			<zipfileset excludes="META-INF/*.SF" src="${project.lib.dir}/${project.abc.binfile}"/>
+		</jar>
+	</target>
 </project>
